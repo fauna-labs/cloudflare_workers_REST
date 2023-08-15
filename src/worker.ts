@@ -1,32 +1,106 @@
-/**
- * Welcome to Cloudflare Workers! This is your first worker.
- *
- * - Run `npm run dev` in your terminal to start a development server
- * - Open a browser tab at http://localhost:8787/ to see your worker in action
- * - Run `npm run deploy` to publish your worker
- *
- * Learn more at https://developers.cloudflare.com/workers/
- */
-
+import { Client, fql} from "fauna";
+import dotenv from 'dotenv';
+dotenv.config();
 export interface Env {
-	// Example binding to KV. Learn more at https://developers.cloudflare.com/workers/runtime-apis/kv/
-	// MY_KV_NAMESPACE: KVNamespace;
-	//
-	// Example binding to Durable Object. Learn more at https://developers.cloudflare.com/workers/runtime-apis/durable-objects/
-	// MY_DURABLE_OBJECT: DurableObjectNamespace;
-	//
-	// Example binding to R2. Learn more at https://developers.cloudflare.com/workers/runtime-apis/r2/
-	// MY_BUCKET: R2Bucket;
-	//
-	// Example binding to a Service. Learn more at https://developers.cloudflare.com/workers/runtime-apis/service-bindings/
-	// MY_SERVICE: Fetcher;
-	//
-	// Example binding to a Queue. Learn more at https://developers.cloudflare.com/queues/javascript-apis/
-	// MY_QUEUE: Queue;
+ //hello c:
+}
+interface InventoryData {
+  item: string;
+  quantity: number;
+  price: number;
 }
 
+const client = new Client({
+	secret: FAUNA_SECRET, 
+	//THIS DOES NOT WORK AT THE MOMENT
+	//I COULD NOT ACCESS YOUR CLOUDFLARE ACCOUNT TO FIX IT
+	//I DUNNO OTHER WAYS, YOU DO IT PLS D':
+  });
+
 export default {
-	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-		return new Response('Hello World!');
-	},
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+    switch (request.method) {
+      case 'GET':
+        const getUrl = new URL(request.url);
+        const getId = getUrl.searchParams.get('id');
+        
+        try {
+          if (getId) {
+            const response = await client.query(fql`Inventory.byId(${getId})`);
+            return new Response(JSON.stringify(response));
+          } else {
+            const response = await client.query(fql`Inventory.all()`);
+            return new Response(JSON.stringify(response));
+          }
+        } catch (error) {
+          console.error(error);
+          return new Response('Error fetching data', { status: 500 });
+        }
+
+      case 'POST':
+        try {
+          const requestPostData = await request.json() as InventoryData; // Parse the incoming JSON data
+          const item = requestPostData.item;
+          const quantity = requestPostData.quantity;
+          const price = requestPostData.price;
+
+          const response = await client.query(fql`Inventory.create({item: ${item}, quantity: ${quantity}, price: ${price}})`);
+          return new Response(`A new item has been added to the inventory: ${JSON.stringify(response)}`);
+        } catch (error) {
+          console.error(error);
+          return new Response('Error adding item', { status: 500 });
+        }
+
+      case 'PUT':
+        const putUrl = new URL(request.url);
+        const putId = putUrl.searchParams.get('id');
+
+        if (putId) {
+          try {
+            const requestPutData = await request.json() as InventoryData; // Parse incoming JSON data
+            const item = requestPutData.item;
+            const quantity = requestPutData.quantity;
+            const price = requestPutData.price;
+
+            const response = await client.query(fql`
+              let itemToUpdate = Inventory.byId(${putId});
+              itemToUpdate.update({
+                  item: ${item},
+                  quantity: ${quantity},
+                  price: ${price}
+              })`
+            );
+
+            return new Response(`Updated item with ID ${putId} in the inventory: ${JSON.stringify(response)}`);
+          } catch (error) {
+            console.error(error);
+            return new Response(`Error updating item`, { status: 500 });
+          }
+        } else {
+          return new Response('Missing ID to update item', { status: 400 });
+        }
+
+      case 'DELETE':
+        const deleteUrl = new URL(request.url);
+        const deleteId = deleteUrl.searchParams.get('id');
+
+        if (deleteId) {
+          try {
+            await client.query(fql`
+              let toDelete = Inventory.byId(${deleteId});
+              toDelete.delete()`
+            );
+            return new Response(`You have deleted the item with ID: ${deleteId} from the inventory`);
+          } catch (error) {
+            console.error(error);
+            return new Response(`Error deleting item`, { status: 500 });
+          }
+        } else {
+          return new Response('Missing ID to delete item', { status: 400 });
+        }
+
+      default:
+        return new Response('This is the default response!', { status: 404 });
+    }
+  },
 };
