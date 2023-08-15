@@ -1,6 +1,4 @@
 import { Client, fql} from "fauna";
-import dotenv from 'dotenv';
-dotenv.config();
 export interface Env {
  //hello c:
 }
