@@ -57,7 +57,7 @@ export default {
 
         if (putId) {
           try {
-            const requestPutData = await request.json() as InventoryData; // Parse incoming JSON data
+            const requestPutData = await request.json() as InventoryData;
             const item = requestPutData.item;
             const quantity = requestPutData.quantity;
             const price = requestPutData.price;
