@@ -1,6 +1,6 @@
 import { Client, fql} from "fauna";
 export interface Env {
- //hello c:
+  FAUNA_SECRET: string;
 }
 interface InventoryData {
   item: string;
@@ -8,15 +8,12 @@ interface InventoryData {
   price: number;
 }
 
-const client = new Client({
-	secret: FAUNA_SECRET, 
-	//THIS DOES NOT WORK AT THE MOMENT
-	//I COULD NOT ACCESS YOUR CLOUDFLARE ACCOUNT TO FIX IT
-	//I DUNNO OTHER WAYS, YOU DO IT PLS D':
-  });
-
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+	const client = new Client({
+		secret: env.FAUNA_SECRET,
+	});
+
     switch (request.method) {
       case 'GET':
         const getUrl = new URL(request.url);
