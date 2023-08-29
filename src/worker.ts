@@ -18,14 +18,13 @@ export default {
       case 'GET':
         const getUrl = new URL(request.url);
         const getId = getUrl.searchParams.get('id');
-        
         try {
           if (getId) {
             const response = await client.query(fql`Inventory.byId(${getId})`);
             return new Response(JSON.stringify(response));
           } else {
             const response = await client.query(fql`Inventory.all()`);
-            return new Response(JSON.stringify(response));
+            return new Response(JSON.stringify(response.data));
           }
         } catch (error) {
           console.error(error);
