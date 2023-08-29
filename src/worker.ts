@@ -17,15 +17,14 @@ export default {
     switch (request.method) {
       case 'GET':
         const getUrl = new URL(request.url);
-        const getId = getUrl.searchParams.get('id');
-        
+        const getId = getUrl.pathname.split('/').pop();
         try {
           if (getId) {
             const response = await client.query(fql`Inventory.byId(${getId})`);
             return new Response(JSON.stringify(response));
           } else {
             const response = await client.query(fql`Inventory.all()`);
-            return new Response(JSON.stringify(response));
+            return new Response(JSON.stringify(response.data));
           }
         } catch (error) {
           console.error(error);
@@ -48,7 +47,7 @@ export default {
 
       case 'PUT':
         const putUrl = new URL(request.url);
-        const putId = putUrl.searchParams.get('id');
+				const putId = putUrl.pathname.split('/').pop();
 
         if (putId) {
           try {
@@ -77,7 +76,7 @@ export default {
 
       case 'DELETE':
         const deleteUrl = new URL(request.url);
-        const deleteId = deleteUrl.searchParams.get('id');
+        const deleteId = deleteUrl.pathname.split('/').pop();
 
         if (deleteId) {
           try {

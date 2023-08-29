@@ -6,8 +6,8 @@ compatibility_date = "2023-08-07"
 # Note: Use secrets to store sensitive data.
 # Docs: https://developers.cloudflare.com/workers/platform/environment-variables
 [vars]
-FAUNA_SECRET = "PUT YOUR KEY IN HERE"
-#🖕
+FAUNA_SECRET = "fnAFMeNj1-ACVzSkrDgAyLnJANoqOb7Uuyz2s2nA"
+#
 
 # Bind a KV Namespace. Use KV as persistent storage for small key-value pairs.
 # Docs: https://developers.cloudflare.com/workers/runtime-apis/kv
